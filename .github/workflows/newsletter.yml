@@ -37,7 +37,7 @@ jobs:
 
       - name: Generate daily brief
         env:
-          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
         run: python generate_daily_newsletter.py
 
       - name: Send daily brief via Gmail
@@ -67,7 +67,7 @@ jobs:
 
       - name: Generate weekly digest
         env:
-          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
         run: python generate_weekly_digest.py
 
       - name: Send weekly digest via Gmail
