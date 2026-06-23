@@ -1,15 +1,31 @@
-name: Daily Newsletter
+name: LA Actuary Newsletter
 
 on:
   schedule:
-    - cron: '0 13 * * 1-5'  # 8 AM CT weekdays
-  workflow_dispatch:  # allows manual runs
+    - cron: '0 13 * * 1-5'   # 8:00 AM CT, weekdays (daily brief)
+    - cron: '0 14 * * 5'     # 9:00 AM CT, Fridays only (weekly digest)
+  workflow_dispatch:
+    inputs:
+      type:
+        description: 'Newsletter type to run'
+        required: true
+        default: 'daily'
+        type: choice
+        options:
+          - daily
+          - weekly
+          - both
 
 jobs:
-  run-newsletter:
+  daily-brief:
+    name: Generate & Send Daily Brief
     runs-on: ubuntu-latest
+    if: |
+      github.event_name == 'workflow_dispatch' && (github.event.inputs.type == 'daily' || github.event.inputs.type == 'both') ||
+      github.event_name == 'schedule' && github.event.schedule == '0 13 * * 1-5'
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -17,9 +33,46 @@ jobs:
           python-version: '3.11'
 
       - name: Install dependencies
-        run: pip install openai markdown
+        run: pip install -r requirements.txt
 
-      - name: Run newsletter
+      - name: Generate daily brief
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
         run: python generate_daily_newsletter.py
+
+      - name: Send daily brief via Gmail
+        env:
+          GMAIL_SENDER: ${{ secrets.GMAIL_SENDER }}
+          GMAIL_APP_PASSWORD: ${{ secrets.GMAIL_APP_PASSWORD }}
+          RECIPIENT_EMAIL: ${{ secrets.RECIPIENT_EMAIL }}
+        run: python send_via_gmail.py --type daily --to $RECIPIENT_EMAIL
+
+  weekly-digest:
+    name: Generate & Send Weekly Digest
+    runs-on: ubuntu-latest
+    if: |
+      github.event_name == 'workflow_dispatch' && (github.event.inputs.type == 'weekly' || github.event.inputs.type == 'both') ||
+      github.event_name == 'schedule' && github.event.schedule == '0 14 * * 5'
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Generate weekly digest
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        run: python generate_weekly_digest.py
+
+      - name: Send weekly digest via Gmail
+        env:
+          GMAIL_SENDER: ${{ secrets.GMAIL_SENDER }}
+          GMAIL_APP_PASSWORD: ${{ secrets.GMAIL_APP_PASSWORD }}
+          RECIPIENT_EMAIL: ${{ secrets.RECIPIENT_EMAIL }}
+        run: python send_via_gmail.py --type weekly --to $RECIPIENT_EMAIL
