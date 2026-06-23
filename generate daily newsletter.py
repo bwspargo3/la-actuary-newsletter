@@ -1,11 +1,10 @@
 import os
-import json
 from datetime import datetime
-from openai import OpenAI
+from google import genai
 import markdown
 
 def generate_daily_content():
-    client = OpenAI()
+    client = genai.Client(api_key=os.environ["GEMINI_API_KEY"])
     today_str = datetime.now().strftime("%A, %B %d, %Y")
 
     research_data = """
@@ -79,16 +78,12 @@ def generate_daily_content():
     {research_data}
     """
 
-    response = client.chat.completions.create(
-        model="gpt-4o-mini",
-        messages=[
-            {"role": "system", "content": "You are a specialized L&A actuarial consulting partner."},
-            {"role": "user", "content": prompt}
-        ],
-        temperature=0.1
+    response = client.models.generate_content(
+        model="gemini-2.5-flash",
+        contents=prompt,
     )
 
-    return response.choices[0].message.content
+    return response.text
 
 
 def generate_html_email(markdown_content):
