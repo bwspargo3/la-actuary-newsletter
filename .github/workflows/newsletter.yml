@@ -1,0 +1,25 @@
+name: Daily Newsletter
+
+on:
+  schedule:
+    - cron: '0 13 * * 1-5'  # 8 AM CT weekdays
+  workflow_dispatch:  # allows manual runs
+
+jobs:
+  run-newsletter:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: pip install openai markdown
+
+      - name: Run newsletter
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        run: python generate_daily_newsletter.py
