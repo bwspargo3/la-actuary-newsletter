@@ -1,0 +1,122 @@
+Tool: gmail_search_messages
+  Description:
+    Search and list Gmail messages with optional query and label filters.
+  Inputs:
+    - max_results:
+        Type: integer
+        Description: (Optional) Maximum number of results to return. Default is 50, max is 500
+        Required: false
+        default: 50
+        maximum: 500
+    - page_token:
+        Type: string
+        Description: Page token to retrieve a specific page of results in the list.
+        Required: false
+    - q:
+        Type: string
+        Description: Search query using Gmail search operators and keywords (e.g., from:someuser@example.com, subject:"meeting", after:2024/01/01).
+        Required: false
+Tool: gmail_read_threads
+  Description:
+    Read one or more Gmail threads by ID.
+  Inputs:
+    - thread_ids:
+        Type: array
+        Description: Array of thread IDs to retrieve. Use this for reading one or multiple threads efficiently. Max is 100.
+        Required: true
+        maxItems: 100
+        minItems: 1
+        Array Items:
+          Type: string
+    - include_full_messages:
+        Type: boolean
+        Description: Include the full message body when conducting the thread search.
+        Required: false
+        default: true
+Tool: gmail_send_messages
+  Description:
+    Send multiple Gmail messages or save them as drafts. Calling this tool triggers an interactive user confirmation in the UI to choose "Save to drafts" or "Send" before any message is sent.
+  Inputs:
+    - messages:
+        Type: array
+        Description: Array of email messages to send
+        Required: true
+        maxItems: 100
+        minItems: 1
+        Array Items:
+          Type: object
+          Properties:
+            - thread_id:
+                Type: string
+                Description: (Optional) The ID of an existing thread to reply to. When provided, the message is sent as a reply within that thread. When omitted, a new thread is created.
+                Required: false
+            - to:
+                Type: array
+                Description: List of recipient email addresses
+                Required: true
+                minItems: 1
+                Array Items:
+                  Type: string
+                  Description: Email address of a recipient
+            - attachments:
+                Type: array
+                Description: (Optional) List of file paths to attach to the email. Regular files: use absolute paths. Markdown files: first run `manus-md-to-pdf`, then attach PDF. Slides projects: use the `manus-slides://{id}` URL from the `slide_present` tool result.
+                Required: false
+                Array Items:
+                  Type: string
+                  Description: File path or slides project (use `manus-slides://{id}` from `slide_present` result for slides)
+            - bcc:
+                Type: array
+                Description: (Optional) List of BCC recipient email addresses
+                Required: false
+                Array Items:
+                  Type: string
+                  Description: Email address of a BCC recipient
+            - cc:
+                Type: array
+                Description: (Optional) List of CC recipient email addresses
+                Required: false
+                Array Items:
+                  Type: string
+                  Description: Email address of a CC recipient
+            - content:
+                Type: string
+                Description: Plain text content of the email message (not markdown or HTML)
+                Required: true
+            - subject:
+                Type: string
+                Description: Subject of the email message
+                Required: true
+Tool: gmail_manage_labels
+  Description:
+    Manage Gmail labels: list, get, create, update, delete labels, or apply/remove labels on messages. Use this to organize Gmail by managing labels and applying them to emails.
+  Inputs:
+    - message_list_visibility:
+        Type: string
+        Description: (Optional) The visibility of messages with this label in the message list. For create/update operations.
+        Required: false
+        enum: [show hide]
+    - name:
+        Type: string
+        Description: The display name for the label (required for create, optional for update).
+        Required: false
+    - operation:
+        Type: string
+        Description: The label management operation to perform. Use `list` to see all available labels. Use `get` with a `label_id` to see details of a specific label. Use `create` with a `name` to create a new label. Use `update` with a `label_id` and updated fields to modify a label. Use `delete` with a `label_id` to remove a label. Use `apply` with a `label_id` and `message_ids` to add a label to messages. Use `remove` with a `label_id` and `message_ids` to remove a label from messages.
+        Required: true
+        enum: [list get create update delete apply remove]
+    - label_id:
+        Type: string
+        Description: The ID of the label (required for get, update, delete, apply, remove operations).
+        Required: false
+    - label_list_visibility:
+        Type: string
+        Description: (Optional) The visibility of the label in the label list. For create/update operations.
+        Required: false
+        enum: [labelShow labelShowIfUnread labelHide]
+    - message_ids:
+        Type: array
+        Description: Array of message IDs to apply/remove labels on (required for apply/remove operations).
+        Required: false
+        Array Items:
+          Type: string
